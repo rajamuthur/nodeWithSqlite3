@@ -1,0 +1,18 @@
+URL: http://www.sqlitetutorial.net/sqlite-nodejs/connect/
+
+Video Tutorial: https://www.youtube.com/watch?v=Dzy_32qE_dI&index=11&list=PLzV58Zm8FuBIWu1zvGRUfn0Xh6HXRg9cG
+
+To install sqlite3:
+npm install sqlite3
+
+To install Fake JSON server:
+	npm install -g json-server
+
+	1. Create new json file and create your object. Example: employee details
+	2. To watch file:
+	json-server --watch db.json
+	
+	
+Angular error check cmd:
+ng serve --aot
+	
