@@ -183,6 +183,7 @@ app.get('/api/employees/:id', (req, resp) => {
 // }
 
 //Add/update new data set
+//http://localhost:3000/api/employees
 app.post('/api/employees/', (req, apiResp) => {
     req.body.isActive = req.body.isActive == 1 ? true : false;
     console.log('Add/update: req.body: ', req.body, req.body.isActive, typeof req.body.isActive)
@@ -304,7 +305,7 @@ function updateEmpExperiance(data) {
                 (!resp) ? reject(false) : resolve(true);
             });
         } else {
-            console.log('No records avaliable to update employee experiance resp:', resp);
+            console.log('No records avaliable to update employee experiance resp:');
             resolve(true);
         }
     })
