@@ -4,7 +4,13 @@ const express = require('express');
 const Joi = require('joi');
 const app = express();
 const async = require('async');
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
 app.use(express.json());
+
+let secreteKey = 'angularNodeJsSqlite3';
+
+
 
 function validateDetails(bodyRequest) {
     const schema = {
@@ -103,7 +109,7 @@ app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
 
     // Request headers you wish to allow
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type, Authorization');
 
     // Set to true if you need the website to include cookies in the requests sent
     // to the API (e.g. in case you use sessions)
@@ -116,6 +122,30 @@ app.use(function (req, res, next) {
 app.get('/', (req, resp) => {
     resp.send('Welcome');
 });
+
+function getNewToken(userId) {
+    let payLoad = { subject: userId};
+    let token = jwt.sign(payLoad, secreteKey);
+    return token;
+}
+
+function verifyToken(req, resp, next) {
+    if(!req.headers.authorization) {
+        return resp.status(401).send('Unauthorized Access - 1');
+    } 
+    let token = req.headers.authorization.split(' ')[1];
+    if(!token || token == null) {
+        return resp.status(401).send('Unauthorized Access - 2');
+    }
+
+    let payLoad = jwt.verify(token, secreteKey);
+    if(!payLoad) {
+        return resp.status(401).send('Unauthorized Access - 3');
+    }
+    let userId = payLoad.subject; //Get back stored value
+    console.log('VerifyToken userId: ', userId, ', from token: ', token, payLoad);
+    next();
+}
 
 app.post('/api/validateUser/', (req, resp) => {
     let name = req.body.name || '';
@@ -145,12 +175,13 @@ function getUserDetails(userData, resp) {
         } else {
             userData['privileges'] = data['privilege_list'];
             userData['role'] = data['role_name'];
+            userData['token'] = getNewToken(userData['id']);
             resp.send(userData);
         }
     })
 }
 
-app.get('/api/employees/', (req, resp) => {
+app.get('/api/employees/', verifyToken, (req, resp) => {
     setTimeout(function () {
         userModule.getAllRecords(function (data) {
             console.log('settimeout sleep after 2 seconds: ', data)
@@ -163,7 +194,7 @@ app.get('/api/employees/', (req, resp) => {
     // }
 });
 
-app.get('/api/employees/:id', (req, resp) => {
+app.get('/api/employees/:id', verifyToken, (req, resp) => {
     userModule.getRecordById(req.params.id, function (data) {
         console.log('getRecordById: ', req.params.id, ', resp:', data)
         expModule.getSkillsById(req.params.id, function (skillSet) {
@@ -184,7 +215,7 @@ app.get('/api/employees/:id', (req, resp) => {
 
 //Add/update new data set
 //http://localhost:3000/api/employees
-app.post('/api/employees/', (req, apiResp) => {
+app.post('/api/employees/', verifyToken, (req, apiResp) => {
     req.body.isActive = req.body.isActive == 1 ? true : false;
     console.log('Add/update: req.body: ', req.body, req.body.isActive, typeof req.body.isActive)
     let { error } = validateDetails(req.body); //Object destructuring ie. response.error is eq to {error}
@@ -325,7 +356,7 @@ function getExpList(exp, empId, getNewExperiances) {
 }
 
 //Delete data set by id
-app.delete('/api/employees/:id', (req, resp) => {
+app.delete('/api/employees/:id', verifyToken, (req, resp) => {
     console.log('deleteRecordById: ', req.params.id);
     userModule.deleteRecordById(req.params.id, function (data) {
         console.log('deleteRecordById success:', data, 'ID: ', req.params.id);

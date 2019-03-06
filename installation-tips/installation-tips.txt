@@ -7,6 +7,8 @@ npm install sqlite3
 
 To install Fake JSON server:
 	npm install -g json-server
+	npm install --save jsonwebtoken
+	npm install --save cors
 
 	1. Create new json file and create your object. Example: employee details
 	2. To watch file:
